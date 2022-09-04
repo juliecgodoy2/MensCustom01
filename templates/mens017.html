@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L'oreal Mensageria (SERVIÇO DE CARTÓRIO)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loginb.css') }}" />
+  </head>
+  <body>
+    <h1>SOLICITAÇÕES DE CAIXA</h1>
+    <form action="/mens017" method="POST">
+
+      <div class="form__fieldset">
+        <label for="mens017_cxUm" class=" form__label">QTD. CAIXA N.1:</label>
+        <input type="number" name="mens017_cxUm" id="mens017_cxUm" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens017_cxDois" class=" form__label">QTD. CAIXA N.2:</label>
+        <input type="number" name="mens017_cxDois" id="mens017_cxDois" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens017_cxTres" class=" form__label">QTD. CAIXA N.3:</label>
+        <input type="number" name="mens017_cxTres" id="mens017_cxTres" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens017_cxQuat" class=" form__label">QTD. CAIXA N.4:</label>
+        <input type="number" name="mens017_cxQuat" id="mens017_cxQuat" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <input
+          class="form__submit form__input"
+          type="submit"
+          value="Ok"
+        />
+      </div>
+    </form>
+  </body>
+</html>

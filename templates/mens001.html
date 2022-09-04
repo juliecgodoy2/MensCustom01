@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L'oreal Mensageria (SERVIÇO DE CARTÓRIO)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loginb.css') }}" />
+  </head>
+  <body>
+    <h1>SERVIÇO DE CARTÓRIO</h1>
+    <form action="/mens001" method="POST">
+
+      <div class="form__fieldset">
+        <label for="mens001_quant" class="form__label">QUANTIDADE DE ITENS / COLETAR:</label>
+        <input type="number" name="mens001_quant" id="mens001_quant" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <label for="mens001_colMat" class="form__label">PERÍODO DE COLETA DO MATERIAL:</label>
+          <select id="mens001_colMat" name="mens001_colMat" class="form__fieldset">
+            <option disabled selected value> -- Selecione uma opção -- </option>
+            <option value="M">Manhã</option>
+            <option value="T">Tarde</option>
+          </select>
+      </div>
+
+      <div class="form__fieldset">
+        <label for="mens001_autent" class="form__label">AUTENTICAÇÃO:</label>
+        <input type="text" name="mens001_autent" id="mens001_autent" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <label for="mens001_outR" class="form__label">OUTROS:</label>
+        <input type="text" name="mens001_outR" id="mens001_outR" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <input
+          class="form__submit form__input"
+          type="submit"
+          value="Ok"
+        />
+      </div>
+    </form>
+  </body>
+</html>

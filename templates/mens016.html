@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L'oreal Mensageria (SERVIÇO DE CARTÓRIO)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loginb.css') }}" />
+  </head>
+  <body>
+    <h1>SERVIÇO DE CARTÓRIO - RECONHECIMENTO DE FIRMA</h1>
+    <form action="/mens016" method="POST">
+
+      <div class="form__fieldset">
+        <label for="mens016_quant" class=" form__label">QUANTIDADE DE ITENS / COLETAR:</label>
+        <input type="number" name="mens016_quant" id="mens016_quant" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens016_colMat" class=" form__label">PERÍODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO:</label>
+        <input type="datetime-local" name="mens016_colMat" id="mens016_colMat" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens016_recFir" class=" form__label">RECONHECIMENTO DE FIRMA:</label>
+        <input type="text" name="mens016_recFir" id="mens016_recFir" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <label for="mens016_firm" class=" form__label">ABERTURA DE FIRMA:</label>
+        <input type="text" name="mens016_firm" id="mens016_firm" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens016_outR" class=" form__label">OUTROS:</label>
+        <input type="text" name="mens016_outR" id="mens016_outR" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <input
+          class="form__submit form__input"
+          type="submit"
+          value="Ok"
+        />
+      </div>
+    </form>
+  </body>
+</html>

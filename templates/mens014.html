@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L'oreal Mensageria (SERVIÇO DE CARTÓRIO)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loginb.css') }}" />
+  </head>
+  <body>
+    <h1>MENSAGERIA MATERIAIS PARA RELAÇÕES PÚBLICAS - ENVIO NORMAL</h1>
+    <form action="/mens014" method="POST">
+
+      <div class="form__fieldset">
+        <label for="mens014_tipEnv" class="form__label">TIPO DE ENVIO:</label>
+          <select id="mens014_tipEnv" name="mens014_tipEnv" class="form__fieldset">
+            <option disabled selected value> -- Selecione uma opção -- </option>
+            <option value="EIN">ENVIO INTERNACIONAL</option>
+            <option value="ENM">ENVIO NACIONAL</option>
+            <option value="MDE">MÚLTIPLOS DESTINATÁRIOS</option>
+          </select>
+      </div>
+
+      <div class="form__fieldset">
+        <label for="mens014_tipPrd" class="form__label">TIPO DE PRODUTO:</label>
+          <select id="mens014_tipPrd" name="mens014_tipPrd" class="form__fieldset">
+            <option disabled selected value> -- Selecione uma opção -- </option>
+            <option value="DES">DESCARTÁVEL</option>
+            <option value="GRA">FRÁGIL</option>
+            <option value="INF">INFLAMÁVEL</option>
+            <option value="NOR">NORMAL</option>
+          </select>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_quant" class=" form__label">QUANTIDADE DE ITENS / COLETAR:</label>
+        <input type="number" name="mens014_quant" id="mens014_quant" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_colMat" class=" form__label">PERÍODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO:</label>
+        <input type="datetime-local" name="mens014_colMat" id="mens014_colMat" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_pesoKG" class=" form__label">PESO APROXIMADO KG:</label>
+        <input type="number" name="mens014_pesoKG" id="mens014_pesoKG" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_qbr" class=" form__label">PERMITE QUEBRA DE ENVIO?:</label>
+        <input type="option" name="mens014_qbr" id="mens014_qbr" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_empE" class=" form__label">EMPRESA PARA ENVIO:</label>
+        <input type="text" name="mens014_empE" id="mens014_empE" class="form__input"/>
+      </div>
+
+	  <h3>REMETENTE: </h3>
+
+      <div class="form__fieldset">
+        <label for="mens014_empR" class=" form__label">EMPRESA:</label>
+        <input type="text" name="mens014_empR" id="mens014_empR" class="form__input"/>
+      </div>
+	  <div class="form__fieldset">
+        <label for="mens014_cepR" class=" form__label">CEP:</label>
+        <input type="text" name="mens014_cepR" id="mens014_cepR" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_endR" class=" form__label">ENDEREÇO:</label>
+        <input type="text" name="mens014_endR" id="mens014_endR" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_baiR" class=" form__label">BAIRRO:</label>
+        <input type="text" name="mens014_baiR" id="mens014_baiR" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_cidR" class=" form__label">CIDADE:</label>
+        <input type="text" name="mens014_cidR" id="mens014_cidR" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_estR" class=" form__label">ESTADO:</label>
+        <input type="text" name="mens014_estR" id="mens014_estR" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_cepR" class=" form__label">CEP:</label>
+        <input type="text" name="mens014_cepR" id="mens014_cepR" class="form__input"/>
+      </div>
+
+	  <h3>DESTINATÁRIO: </h3>
+
+      <div class="form__fieldset">
+        <label for="mens014_nomD" class=" form__label">NOME:</label>
+        <input type="text" name="mens014_nomD" id="mens014_nomD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_cepD" class=" form__label">CEP:</label>
+        <input type="text" name="mens014_cepD" id="mens014_cepD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_endD" class=" form__label">ENDEREÇO:</label>
+        <input type="text" name="mens014_endD" id="mens014_endD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_baiD" class=" form__label">BAIRRO:</label>
+        <input type="text" name="mens014_baiD" id="mens014_baiD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_cidD" class=" form__label">CIDADE:</label>
+        <input type="text" name="mens014_cidD" id="mens014_cidD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_estD" class=" form__label">ESTADO:</label>
+        <input type="text" name="mens014_estD" id="mens014_estD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_telD" class=" form__label">TELEFONE:</label>
+        <input type="text" name="mens014_telD" id="mens014_telD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_numD" class=" form__label">NÚMERO / COMPLEMENTO:</label>
+        <input type="text" name="mens014_numD" id="mens014_numD" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_valor" class=" form__label">VALOR APROXIMADO DO(S) ITEN(S) A ENVIAR:</label>
+        <input type="number" name="mens014_valor" id="mens014_valor" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens014_codProj" class=" form__label">CÓDIGO DE PROJETO:</label>
+        <input type="text" name="mens014_codProj" id="mens014_codProj" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <input
+          class="form__submit form__input"
+          type="submit"
+          value="Ok"
+        />
+      </div>
+    </form>
+  </body>
+</html>

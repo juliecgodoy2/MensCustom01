@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <title>CIMO - MENSAGERIA L'ORÉAL</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 style="text-align: center; font-size:30px">Serviço de Mensageria</h1>
+        <img src="{{ url_for('static', filename='img/logo_cimo.png') }}" alt="CIMO" width="300" height="42" class="center">
+      </div>
+
+      <form id="form" class="form">
+        <div class="form-control">
+          <label for="username">Usuário</label>
+          <input type="text" id="username" placeholder="Digite seu Usuário..." />
+          <i class="fas fa-exclamation-circle"></i>
+          <i class="fas fa-check-circle"></i>
+          <small>Mensagem de erro</small>
+        </div>
+
+        <div class="form-control">
+          <label for="password">Senha</label>
+          <input type="password" id="password" placeholder="Digite sua senha..." />
+          <i class="fas fa-exclamation-circle"></i>
+          <i class="fas fa-check-circle"></i>
+          <small>Mensagem de erro</small>
+        </div>
+
+        <button type="submit">Logar</button>
+
+        <div>
+          <img src="{{ url_for('static', filename='img/logo_gps_vvt.png') }}" alt="Vivante, empresa do grupo GPS" width="300" height="66" class="center">
+        </div>
+
+      </form>
+    </div>
+
+    <script
+      src="https://kit.fontawesome.com/f9e19193d6.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="{{ url_for('static', filename='script/login.js') }}"></script>
+  </body>
+</html>

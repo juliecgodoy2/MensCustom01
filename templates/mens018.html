@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L'oreal Mensageria (SERVIÇO DE CARTÓRIO)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loginb.css') }}" />
+  </head>
+  <body>
+    <h1>MENSAGERIA MATERIAIS PROMOCIONAIS - ENVIO NORMAL</h1>
+    <form action="/mens018" method="POST">
+
+      <<div class="form__fieldset">
+        <label for="mens018_envTres" class=" form__label">QTD. ENVELOPE A3:</label>
+        <input type="number" name="mens018_envTres" id="mens018_envTres" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens018_envQuat" class=" form__label">QTD. ENVELOPE A4:</label>
+        <input type="number" name="mens018_envQuat" id="mens018_envQuat" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <input
+          class="form__submit form__input"
+          type="submit"
+          value="Ok"
+        />
+      </div>
+    </form>
+  </body>
+</html>

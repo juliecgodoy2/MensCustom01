@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L'oreal Mensageria (SERVIÇO DE CARTÓRIO)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loginb.css') }}" />
+  </head>
+  <body>
+    <h1>ENTREGA/RETIRADA DE DOCUMENTOS</h1>
+    <form action="/mens002" method="POST">
+
+      <div class="form__fieldset">
+        <label for="mens002_quant" class=" form__label">QUANTIDADE DE ITENS / COLETAR:</label>
+        <input type="number" name="mens002_quant" id="mens002_quant" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens002_colMat" class="form__label">PERÍODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO:</label>
+        <input type="datetime-local" name="mens002_colMat" id="mens002_colMat" class="form__input"/>
+      </div>
+
+      <h3>REMETENTE: </h3>
+
+      <div class="form__fieldset">
+        <label for="mens002_empR" class=" form__label">EMPRESA:</label>
+        <input type="text" name="mens002_empR" id="mens002_empR" class="form__input"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="mens002_cepR" class=" form__label">CEP:</label>
+        <input type="text" name="mens002_cepR" id="mens002_cepR" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_endR" class=" form__label">ENDEREÇO:</label>
+        <input type="text" name="mens002_endR" id="mens002_endR" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_baiR" class=" form__label">BAIRRO:</label>
+        <input type="text" name="mens002_baiR" id="mens002_baiR" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_cidR" class=" form__label">CIDADE:</label>
+        <input type="text" name="mens002_cidR" id="mens002_cidR" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_estR" class=" form__label">ESTADO:</label>
+        <input type="text" name="mens002_estR" id="mens002_estR" class="form__input"/>
+      </div>
+
+      <h3>DESTINATÁRIO: </h3>
+
+       <div class="form__fieldset">
+        <label for="mens002_nomD" class=" form__label">NOME:</label>
+        <input type="text" name="mens002_nomD" id="mens002_nomD" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_cepD" class=" form__label">CEP:</label>
+        <input type="text" name="mens002_cepD" id="mens002_cepD" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_endD" class=" form__label">ENDEREÇO:</label>
+        <input type="text" name="mens002_endD" id="mens002_endD" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_baiD" class=" form__label">BAIRRO:</label>
+        <input type="text" name="mens002_baiD" id="mens002_baiD" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_cidD" class=" form__label">CIDADE:</label>
+        <input type="text" name="mens002_cidD" id="mens002_cidD" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_estD" class=" form__label">ESTADO:</label>
+        <input type="text" name="mens002_estD" id="mens002_estD" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_telD" class=" form__label">TELEFONE:</label>
+        <input type="text" name="mens002_telD" id="mens002_telD" class="form__input"/>
+      </div>
+       <div class="form__fieldset">
+        <label for="mens002_numD" class=" form__label">NÚMERO:</label>
+        <input type="text" name="mens002_numD" id="mens002_numD" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <input
+          class="form__submit form__input"
+          type="submit"
+          value="Ok"
+        />
+      </div>
+    </form>
+  </body>
+</html>
