@@ -2,17 +2,18 @@ from flask import Flask, render_template, request
 import requests
 from bs4 import BeautifulSoup
 import pyautogui
+import lxml
 
 username = ""
 password = ""
 
 app = Flask(__name__)
 
+
 # Tela de Login-------------------------------------------------------------------
 
 @app.route("/loginb", methods=["GET", "POST"])
 def loginb():
-
     global username
     username = request.form.get("username")
     global password
@@ -37,7 +38,8 @@ def loginb():
 </soap:Envelope>"""
 
         response = requests.post(url, data=body, headers=headers)
-        soup = BeautifulSoup(response.content, 'xml')
+        print(response.content)
+        soup = BeautifulSoup(response.content, features="xml")
         resp = soup.find_all('CheckUserResult')[0].text
         print(resp)
 
@@ -49,6 +51,9 @@ def loginb():
         pyautogui.alert("Erro. Por favor, verifique seu login / senha.")
 
     return render_template("loginb.html")
+
+# Tela de solicitação ---------------------------------------------------------------
+
 
 
 # Tela de Serviços-------------------------------------------------------------------
@@ -65,6 +70,7 @@ def servicos():
 
     return render_template("servicos.html")
 
+
 # Tela de Serviços mens001 -------------------------------------------------------------------
 
 mens001_quant = ""
@@ -72,30 +78,69 @@ mens001_colMat = ""
 mens001_autent = ""
 mens001_outR = ""
 
-@app.route("/mens001", methods = ["GET", "POST"])
-def mens001():
 
-    global mens001_quant
-    global mens001_colMat
-    global mens001_autent
-    global mens001_outR
+@app.route("/mens001", methods=["GET", "POST"])
+def mens001():
+    global mens001_quant, mens001_colMat, mens001_autent, mens001_outR
+
+    global mens001_url, mens001_headers, mens001_body
+
+    global mens001_value, mens001_levelData
+
+
 
     mens001_quant = request.form.get("mens001_quant")
-    print(mens001_colMat)
-
     mens001_colMat = request.form.get("mens001_colMat")
-    print(mens001_colMat)
-
     mens001_autent = request.form.get("mens001_autent")
-    print(mens001_autent)
-
     mens001_outR = request.form.get("mens001_outR")
-    print(mens001_outR)
 
-    if mens002_quant == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
-        return render_template("mens001.html")
-    else:
-        return render_template("login.html")
+    mens001_value = (mens001_quant, mens001_colMat, mens001_autent, mens001_outR)
+    mens001_levelData = ("1", "2", "3", "4")
+
+
+
+
+    for n, m in zip(mens001_value, mens001_levelData):
+
+        if (mens001_quant is None) or (mens001_colMat is None) or (mens001_autent is None) or (mens001_outR is None):
+            pass
+        else:
+            mens001_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens001_headers = {'content-type': 'text/xml'}
+            mens001_body = """<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <SaveTableRow xmlns="http://sisteplant.com/">
+              <user>236833</user>
+              <company>MASTER2</company>
+              <tableName>WorkRequestData</tableName>
+              <columnValues>
+                <Column> <name>levelData</name> <value>""" + m + """</value> </Column>
+                <Column> <name>value</name> <value>""" + n + """</value> </Column>
+                <Column> <name>workRequest</name> <value>169</value> </Column>
+              </columnValues>
+            </SaveTableRow>
+          </soap:Body>
+        </soap:Envelope>"""
+
+            print(m + "/" + n)
+            response = requests.post(mens001_url, data=mens001_body, headers=mens001_headers)
+            print(response.content)
+            mens001_soup = BeautifulSoup(response.content, features="xml")
+            mens001_resp = mens001_soup.find_all('SaveTableRowResult')[0].text
+            print(mens001_resp)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")
+
+        return render_template("loginb.html")
+
+
+
 
 # Tela de Serviços mens002 -------------------------------------------------------------------
 
@@ -116,9 +161,9 @@ mens002_estD = ""
 mens002_telD = ""
 mens002_numD = ""
 
+
 @app.route("/mens002", methods=["GET", "POST"])
 def mens002():
-
     global mens002_quant
     global mens002_colMat
     global mens002_empR
@@ -154,8 +199,7 @@ def mens002():
     mens002_telD = request.form.get("mens002_telD")
     mens002_numD = request.form.get("mens002_numD")
 
-
-    if mens002_quant == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens002_quant == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens002.html")
     else:
         return render_template("login.html")
@@ -170,7 +214,6 @@ mens003_numD = ""
 
 @app.route("/mens003", methods=["GET", "POST"])
 def mens003():
-
     global mens003_endD
     global mens003_baiD
     global mens003_numD
@@ -179,7 +222,7 @@ def mens003():
     mens003_baiD = request.form.get("mens003_baiD")
     mens003_numD = request.form.get("mens003_numD")
 
-    if mens003_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens003_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens003.html")
     else:
         return render_template("login.html")
@@ -211,7 +254,6 @@ mens004_telD = ""
 mens004_numD = ""
 mens004_valor = ""
 mens004_codProj = ""
-
 
 
 @app.route("/mens004", methods=["GET", "POST"])
@@ -272,7 +314,6 @@ def mens004():
         return render_template("login.html")
 
 
-
 # Tela de Serviços mens005 -------------------------------------------------------------------
 
 mens005_tipEnv = ""
@@ -297,6 +338,7 @@ mens005_telD = ""
 mens005_numD = ""
 mens005_valor = ""
 mens005_codProj = ""
+
 
 @app.route("/mens005", methods=["GET", "POST"])
 def mens005():
@@ -346,11 +388,10 @@ def mens005():
     mens005_valor = request.form.get("mens005_valor")
     mens005_codProj = request.form.get("mens005_codProj")
 
-    if mens005_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens005_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens005.html")
     else:
         return render_template("login.html")
-
 
 
 # Tela de Serviços mens006 -------------------------------------------------------------------
@@ -430,7 +471,7 @@ def mens006():
     mens006_valor = request.form.get("mens006_valor")
     mens006_codProj = request.form.get("mens006_codProj")
 
-    if mens006_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens006_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens006.html")
     else:
         return render_template("login.html")
@@ -461,6 +502,7 @@ mens007_telD = ""
 mens007_numD = ""
 mens007_valor = ""
 mens007_codProj = ""
+
 
 @app.route("/mens007", methods=["GET", "POST"])
 def mens007():
@@ -512,7 +554,7 @@ def mens007():
     mens007_valor = request.form.get("mens007_valor")
     mens007_codProj = request.form.get("mens007_codProj")
 
-    if mens007_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens007_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens007.html")
     else:
         return render_template("login.html")
@@ -543,7 +585,6 @@ mens008_telD = ""
 mens008_numD = ""
 mens008_valor = ""
 mens008_codProj = ""
-
 
 
 @app.route("/mens008", methods=["GET", "POST"])
@@ -596,7 +637,7 @@ def mens008():
     mens008_valor = request.form.get("mens008_valor")
     mens008_codProj = request.form.get("mens008_codProj")
 
-    if mens008_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens008_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens008.html")
     else:
         return render_template("login.html")
@@ -627,6 +668,7 @@ mens009_telD = ""
 mens009_numD = ""
 mens009_valor = ""
 mens009_codProj = ""
+
 
 @app.route("/mens009", methods=["GET", "POST"])
 def mens009():
@@ -678,11 +720,10 @@ def mens009():
     mens009_valor = request.form.get("mens009_valor")
     mens009_codProj = request.form.get("mens009_codProj")
 
-    if mens009_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens009_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens009.html")
     else:
         return render_template("login.html")
-
 
 
 # Tela de Serviços mens010 -------------------------------------------------------------------
@@ -710,8 +751,6 @@ mens010_telD = ""
 mens010_numD = ""
 mens010_valor = ""
 mens010_codProj = ""
-
-
 
 
 @app.route("/mens010", methods=["GET", "POST"])
@@ -764,7 +803,7 @@ def mens010():
     mens010_valor = request.form.get("mens010_valor")
     mens010_codProj = request.form.get("mens010_codProj")
 
-    if mens010_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens010_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens010.html")
     else:
         return render_template("login.html")
@@ -795,7 +834,6 @@ mens011_telD = ""
 mens011_numD = ""
 mens011_valor = ""
 mens011_codProj = ""
-
 
 
 @app.route("/mens011", methods=["GET", "POST"])
@@ -848,11 +886,10 @@ def mens011():
     mens011_valor = request.form.get("mens011_valor")
     mens011_codProj = request.form.get("mens011_codProj")
 
-    if mens011_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens011_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens011.html")
     else:
         return render_template("login.html")
-
 
 
 # Tela de Serviços mens012 -------------------------------------------------------------------
@@ -880,7 +917,6 @@ mens012_telD = ""
 mens012_numD = ""
 mens012_valor = ""
 mens012_codProj = ""
-
 
 
 @app.route("/mens012", methods=["GET", "POST"])
@@ -933,7 +969,7 @@ def mens012():
     mens012_valor = request.form.get("mens012_valor")
     mens012_codProj = request.form.get("mens012_codProj")
 
-    if mens012_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens012_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens012.html")
     else:
         return render_template("login.html")
@@ -1016,11 +1052,10 @@ def mens013():
     mens013_valor = request.form.get("mens013_valor")
     mens013_codProj = request.form.get("mens013_codProj")
 
-    if mens013_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens013_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens013.html")
     else:
         return render_template("login.html")
-
 
 
 # Tela de Serviços mens014 -------------------------------------------------------------------
@@ -1048,7 +1083,6 @@ mens014_telD = ""
 mens014_numD = ""
 mens014_valor = ""
 mens014_codProj = ""
-
 
 
 @app.route("/mens014", methods=["GET", "POST"])
@@ -1101,12 +1135,10 @@ def mens014():
     mens014_valor = request.form.get("mens014_valor")
     mens014_codProj = request.form.get("mens014_codProj")
 
-    if mens014_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens014_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens014.html")
     else:
         return render_template("login.html")
-
-
 
 
 # Tela de Serviços mens015 -------------------------------------------------------------------
@@ -1134,8 +1166,6 @@ mens015_telD = ""
 mens015_numD = ""
 mens015_valor = ""
 mens015_codProj = ""
-
-
 
 
 @app.route("/mens015", methods=["GET", "POST"])
@@ -1188,10 +1218,11 @@ def mens015():
     mens015_valor = request.form.get("mens015_valor")
     mens015_codProj = request.form.get("mens015_codProj")
 
-    if mens015_endD == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens015_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens015.html")
     else:
         return render_template("login.html")
+
 
 # Tela de Serviços mens016 -------------------------------------------------------------------
 
@@ -1200,6 +1231,7 @@ mens016_colMat = ""
 mens016_recFir = ""
 mens016_outR = ""
 mens016_firm = ""
+
 
 @app.route("/mens016", methods=["GET", "POST"])
 def mens016():
@@ -1215,10 +1247,11 @@ def mens016():
     mens016_outR = request.form.get("mens016_outR")
     mens016_firm = request.form.get("mens016_firm")
 
-    if mens016_quant == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens016_quant == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens003.html")
     else:
         return render_template("login.html")
+
 
 # Tela de Serviços mens017 -------------------------------------------------------------------
 
@@ -1228,10 +1261,8 @@ mens017_cxTres = ""
 mens017_cxQuat = ""
 
 
-
 @app.route("/mens017", methods=["GET", "POST"])
 def mens017():
-
     global mens017_cxUm
     global mens017_cxDois
     global mens017_cxTres
@@ -1242,26 +1273,27 @@ def mens017():
     mens017_cxTres = request.form.get("mens017_cxTres")
     mens017_cxQuat = request.form.get("mens017_cxQuat")
 
-    if mens017_cxUm == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens017_cxUm == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens017.html")
     else:
         return render_template("login.html")
+
 
 # Tela de Serviços mens018 -------------------------------------------------------------------
 
 mens018_envTres = ""
 mens018_envQuat = ""
 
+
 @app.route("/mens018", methods=["GET", "POST"])
 def mens018():
-
     global mens018_envTres
     global mens018_envQuat
 
     mens018_envTres = request.form.get("mens018_envTres")
     mens018_envQuat = request.form.get("mens018_envQuat")
 
-    if mens018_envTres == "": #and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    if mens018_envTres == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
         return render_template("mens018.html")
     else:
         return render_template("login.html")
