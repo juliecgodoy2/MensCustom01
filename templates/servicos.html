@@ -8,6 +8,38 @@
   <body>
     <h1>Escolha o serviço</h1>
     <form action="/servicos" method="POST">
+
+      <h3>SOLICITANTE: </h3>
+
+      <div class="form__fieldset">
+        <label for="serv_requester" class="form__label">MATRICULA: </label>
+        <input type="text" name="serv_requester" id="serv_requester" class="form__input" value="{{ requester }}"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="serv_requesterName" class="form__label">NOME DO SOLICITANTE: </label>
+        <input type="text" name="serv_requesterName" id="serv_requesterName" class="form__input" value="{{ requesterName }}"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="serv_asset" class="form__label">CÓDIGO DO ATIVO: </label>
+        <input type="text" name="serv_asset" id="serv_asset" class="form__input" value="{{ asset }}"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="serv_assetName" class="form__label">DESCRIÇÃO DO ATIVO: </label>
+        <input type="text" name="serv_assetName" id="serv_assetName" class="form__input" value="{{ assetName }}"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="serv_costCenter" class="form__label">CENTRO DE CUSTO: </label>
+        <input type="text" name="serv_costCenter" id="serv_costCenter" class="form__input" value="{{ costCenter }}"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="serv_costCenterName" class="form__label">DESCRIÇÃO DO CENTRO DE CUSTO: </label>
+        <input type="text" name="serv_assetName" id="serv_costCenterName" class="form__input" value="{{ costCenterName }}"/>
+      </div>
+      <div class="form__fieldset">
+        <label for="serv_departmentName" class="form__label">DEPARTAMENTO: </label>
+        <input type="text" name="serv_departmentName" id="serv_departmentName" class="form__input" value="{{ departmentName }}"/>
+      </div>
+
       <div class="form__fieldset">
         <label for="servico" class="form__label">Serviço de Mensageria:</label>
         <select name="servico" id="servico" class="form__input form__select">

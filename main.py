@@ -2,7 +2,10 @@ from flask import Flask, render_template, request
 import requests
 from bs4 import BeautifulSoup
 import pyautogui
-import lxml
+import pandas as pd
+import pymssql
+from datetime import datetime
+
 
 username = ""
 password = ""
@@ -27,15 +30,17 @@ def loginb():
         url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
         headers = {'content-type': 'text/xml'}
         body = """<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <CheckUser xmlns="http://sisteplant.com/">
-      <user>""" + username + """</user>
-      <password>""" + password + """</password>
-      <company>MASTER2</company>
-    </CheckUser>
-  </soap:Body>
-</soap:Envelope>"""
+                <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                  <soap:Body>
+                    <CheckUser xmlns="http://sisteplant.com/">
+                      <user>""" + username + """</user>
+                      <password>""" + password + """</password>
+                      <company>MASTER2</company>
+                    </CheckUser>
+                  </soap:Body>
+                </soap:Envelope>"""
 
         response = requests.post(url, data=body, headers=headers)
         print(response.content)
@@ -44,7 +49,56 @@ def loginb():
         print(resp)
 
     if resp == "OK":
+
+        # Tela de solicitação ---------------------------------------------------------------
+
+        # Acessando a base de dados do Prisma da Vivante para trazer os dados do usuário logado
+        conn = pymssql.connect(server='200.196.234.14', user='VivanteDB', password='$Wvtk38n!', database='Prisma',
+                               timeout=0, login_timeout=60, charset='UTF-8', as_dict=False, port='1983',
+                               autocommit=False,
+                               tds_version='7.1')
+        cursor = conn.cursor()
+
+        query = """select Requester.requester, Requester.requesterName, Requester.email, Requester.asset, Asset.assetName,
+                Requester.costCenterClient, costCenterClient.costCenterClientName, costCenterClient.department, department.departmentName
+                from Requester
+
+                left join Asset on Asset.asset = Requester.asset and Asset.company = Requester.company   
+                left join CostCenterClient on CostCenterClient.costCenterClient = Requester.costCenterClient and CostCenterClient.company = Requester.company
+                left join Department on Department.department = costCenterClient.department and Department.company = CostCenterClient.company
+
+                where requester.company = 'LORE' and requester.recordState = 'OP'
+
+                order by requester.requester ASC """
+
+        cursor.execute(query)
+
+        # dataFrame de solicitantes criado
+        df = pd.read_sql(query, conn)
+        cursor.close()
+
+        # Filtrando o data frame através do usuário logado
+
+        # testar com o usuário do Marcelo, não esquecer de colocar uma consição caso o usuário não exista
+
+        df_filt = df.loc[df['requester'] == username]
+
+        # Criando as variáveis de tela e de OS
+        global requester, requesterName, email, asset, assetName, costCenter, costCenterName, department, departmentName
+        requester = df_filt['requester'].values.tolist()[0]
+        requesterName = df_filt['requesterName'].values.tolist()[0]
+        email = df_filt['email'].values.tolist()[0]
+        asset = df_filt['asset'].values.tolist()[0]
+        assetName = df_filt['assetName'].values.tolist()[0]
+        costCenter = df_filt['costCenterClient'].values.tolist()[0]
+        costCenterName = df_filt['costCenterClientName'].values.tolist()[0]
+        department = df_filt['department'].values.tolist()[0]
+        departmentName = df_filt['departmentName'].values.tolist()[0]
+
+
         return servicos()
+
+    # Novo bloco incluído atpé aqui-------------------------------------------------------------------------
     elif resp == "":
         pass
     else:
@@ -52,23 +106,73 @@ def loginb():
 
     return render_template("loginb.html")
 
-# Tela de solicitação ---------------------------------------------------------------
-
-
 
 # Tela de Serviços-------------------------------------------------------------------
 
 @app.route("/servicos", methods=["GET", "POST"])
 def servicos():
-    global servico
+    global servico, requester, asset, solic
+    global solic_url, solic_headers, solic_body, solic_soup, solic_resp
+    global data, data_convert
+
+    data = str(datetime.today())
+    data_convert = data[0:19]
+
     servico = request.form.get("servico")
+    solic = "185"
+    print(servico)
+    print(requester)
+
 
     if (servico is None):
         pass
     else:
+
+        # WEB SERVICE DE ABERTURA DE SOLICITAÇÃO ----------------------------------------------------------------------------------
+
+        solic_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+        solic_headers = {'content-type': 'text/xml'}
+        solic_body = f"""<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+        xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <SaveTableRow xmlns="http://sisteplant.com/">
+              <user>{requester}</user>
+              <company>MASTER2</company>
+              <tableName>WorkRequest</tableName>
+              <columnValues> 
+                <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                <Column> <name>workRequestName</name> <value>TESTE DE ABERTURA DE MENSAGERIA</value> </Column>
+                <Column> <name>workRequestDescription</name> <value>TESTE DE ABERTURA DE MENSAGERIA</value> </Column>
+                <Column> <name>workRequestType</name> <value>MSG</value> </Column>
+                <Column> <name>asset</name> <value>{asset}</value> </Column>
+                <Column> <name>workRequestDate</name> <value>{data_convert}</value> </Column>
+                <Column> <name>workRequestState</name> <value>00</value> </Column>
+                <Column> <name>workType</name> <value>CHA</value> </Column>
+                <Column> <name>defect</name> <value>SDF</value> </Column>
+                <Column> <name>priority</name> <value>1</value> </Column>
+                <Column> <name>requester</name> <value>{requester}</value> </Column>
+                <Column> <name>job</name> <value>MSG</value> </Column>
+                <Column> <name>customService</name> <value>{servico}</value> </Column>
+              </columnValues>
+            </SaveTableRow>
+          </soap:Body>
+        </soap:Envelope>"""
+
+        response = requests.post(solic_url, data=solic_body, headers=solic_headers)
+        solic_soup = BeautifulSoup(response.content, features="xml")
+        solic_resp = solic_soup.find_all('SaveTableRowResult')[0].text
+        print(response)
+        print(response.reason)
+        print(response.content)
+
+        # Novo bloco incluído atpé aqui-------------------------------------------------------------------------
         return render_template(servico.lower() + ".html")
 
-    return render_template("servicos.html")
+    return render_template("servicos.html", requester = requester, requesterName=requesterName,
+                           email=email, asset=asset, assetName=assetName, costCenter=costCenter,
+                           costCenterName=costCenterName, department=department, departmentName=departmentName)
 
 
 # Tela de Serviços mens001 -------------------------------------------------------------------
@@ -78,57 +182,59 @@ mens001_colMat = ""
 mens001_autent = ""
 mens001_outR = ""
 
-
 @app.route("/mens001", methods=["GET", "POST"])
 def mens001():
-    global mens001_quant, mens001_colMat, mens001_autent, mens001_outR
-
-    global mens001_url, mens001_headers, mens001_body
-
-    global mens001_value, mens001_levelData
-
-
+    global mens001_quant, mens001_colMat, mens001_autent, mens001_outR, requester
+    global mens001_url, mens001_headers, mens001_body, mens001_resp
+    global mens001_position, mens001_auxDataName, mens001_value, mens001_levelData, solic
 
     mens001_quant = request.form.get("mens001_quant")
     mens001_colMat = request.form.get("mens001_colMat")
     mens001_autent = request.form.get("mens001_autent")
     mens001_outR = request.form.get("mens001_outR")
 
+    mens001_position = ("1", "2", "3", "4")
+    mens001_auxDataName = ("Quantidade", "Data da Coleta", "Autenticação", "Outros")
     mens001_value = (mens001_quant, mens001_colMat, mens001_autent, mens001_outR)
-    mens001_levelData = ("1", "2", "3", "4")
+    mens001_levelData = ("TESTE1", "TESTE2", "TESTE3", "TESTE4")
 
 
-
-
-    for n, m in zip(mens001_value, mens001_levelData):
-
-        if (mens001_quant is None) or (mens001_colMat is None) or (mens001_autent is None) or (mens001_outR is None):
-            pass
-        else:
+    if (mens001_quant is None) or (mens001_colMat is None) or (mens001_autent is None) or (mens001_outR is None):
+        pass
+    else:
+        for auxDataName, position, levelData, value in zip(mens001_auxDataName, mens001_position, mens001_levelData, mens001_value):
             mens001_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
             mens001_headers = {'content-type': 'text/xml'}
-            mens001_body = """<?xml version="1.0" encoding="utf-8"?>
-        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap:Body>
-            <SaveTableRow xmlns="http://sisteplant.com/">
-              <user>236833</user>
-              <company>MASTER2</company>
-              <tableName>WorkRequestData</tableName>
-              <columnValues>
-                <Column> <name>levelData</name> <value>""" + m + """</value> </Column>
-                <Column> <name>value</name> <value>""" + n + """</value> </Column>
-                <Column> <name>workRequest</name> <value>169</value> </Column>
-              </columnValues>
-            </SaveTableRow>
-          </soap:Body>
-        </soap:Envelope>"""
+            mens001_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                            <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                            xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                            xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                              <soap:Body>
+                                <SaveTableRow xmlns="http://sisteplant.com/">
+                                  <user>{requester}</user>
+                                  <company>MASTER2</company>
+                                  <tableName>WorkRequestData</tableName>
+                                  <columnValues>
+                                    <Column> <name>position</name> <value>{position}</value> </Column>
+                                    <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                    <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                    <Column> <name>value</name> <value>{value}</value> </Column>
+                                    <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                  </columnValues>
+                                </SaveTableRow>
+                              </soap:Body>
+                            </soap:Envelope>"""
 
-            print(m + "/" + n)
+            print(levelData + " / " + value)
             response = requests.post(mens001_url, data=mens001_body, headers=mens001_headers)
             print(response.content)
             mens001_soup = BeautifulSoup(response.content, features="xml")
             mens001_resp = mens001_soup.find_all('SaveTableRowResult')[0].text
-            print(mens001_resp)
+
+            print(response)
+            print(response.reason)
+            print(response.content)
+
 
             # if resp == "OK":
             #     return servicos()
