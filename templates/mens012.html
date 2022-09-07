@@ -39,16 +39,17 @@
       </div>
       <div class="form__fieldset">
         <label for="mens012_pesoKG" class=" form__label">PESO APROXIMADO KG:</label>
-        <input type="number" name="mens012_pesoKG" id="mens012_pesoKG" class="form__input"/>
-      </div>
-      <div class="form__fieldset">
-        <label for="mens012_qbr" class=" form__label">PERMITE QUEBRA DE ENVIO?:</label>
-        <input type="option" name="mens012_qbr" id="mens012_qbr" class="form__input"/>
+        <input type="number" name="mens012_pesoKG" id="mens012_pesoKG" class="form__input" onblur="peso()"/>
       </div>
       <div class="form__fieldset">
         <label for="mens012_empE" class=" form__label">EMPRESA PARA ENVIO:</label>
         <input type="text" name="mens012_empE" id="mens012_empE" class="form__input"/>
       </div>
+      <div class="form__fieldset">
+        <label for="mens012_qbr" class=" form__label">PERMITE QUEBRA DE ENVIO?:</label>
+        <input type="option" name="mens012_qbr" id="mens012_qbr" class="form__input"/>
+      </div>
+
 
 	  <h3>REMETENTE: </h3>
 
@@ -56,9 +57,9 @@
         <label for="mens012_empR" class=" form__label">EMPRESA:</label>
         <input type="text" name="mens012_empR" id="mens012_empR" class="form__input"/>
       </div>
-	  <div class="form__fieldset">
+      <div class="form__fieldset">
         <label for="mens012_cepR" class=" form__label">CEP:</label>
-        <input type="text" name="mens012_cepR" id="mens012_cepR" class="form__input"/>
+        <input type="text" name="mens012_cepR" id="mens012_cepR" class="form__input" onblur="pesquisacep(this.value, 'R')"/>
       </div>
       <div class="form__fieldset">
         <label for="mens012_endR" class=" form__label">ENDEREÇO:</label>
@@ -86,7 +87,7 @@
       </div>
       <div class="form__fieldset">
         <label for="mens012_cepD" class=" form__label">CEP:</label>
-        <input type="text" name="mens012_cepD" id="mens012_cepD" class="form__input"/>
+        <input type="text" name="mens012_cepD" id="mens012_cepD" class="form__input" onblur="pesquisacep(this.value, 'D')"/>
       </div>
       <div class="form__fieldset">
         <label for="mens012_endD" class=" form__label">ENDEREÇO:</label>

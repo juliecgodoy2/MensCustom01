@@ -18,6 +18,15 @@ body {
   padding: 40px 20px;
 }
 
+.temps {
+  border: 2px solid #f0f0f0;
+  display: block;
+  border-radius: 10px;
+  font-size: 14px;
+  width: 100%;
+  padding: 40px 20px;
+}
+
 .form__fieldset:not(:last-of-type) {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }

@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 import pyautogui
 import pandas as pd
 import pymssql
-from datetime import datetime
 
+from datetime import datetime
 
 username = ""
 password = ""
@@ -37,7 +37,7 @@ def loginb():
                     <CheckUser xmlns="http://sisteplant.com/">
                       <user>""" + username + """</user>
                       <password>""" + password + """</password>
-                      <company>MASTER2</company>
+                      <company>MRVVT-ID02</company>
                     </CheckUser>
                   </soap:Body>
                 </soap:Envelope>"""
@@ -59,7 +59,7 @@ def loginb():
                                tds_version='7.1')
         cursor = conn.cursor()
 
-        query = """select Requester.requester, Requester.requesterName, Requester.email, Requester.asset, Asset.assetName,
+        query = """select Requester.requester, Requester.requesterName, Requester.email, Requester.telephone2, Asset.assetName,
                 Requester.costCenterClient, costCenterClient.costCenterClientName, costCenterClient.department, department.departmentName
                 from Requester
 
@@ -88,17 +88,15 @@ def loginb():
         requester = df_filt['requester'].values.tolist()[0]
         requesterName = df_filt['requesterName'].values.tolist()[0]
         email = df_filt['email'].values.tolist()[0]
-        asset = df_filt['asset'].values.tolist()[0]
+        asset = df_filt['telephone2'].values.tolist()[0]
         assetName = df_filt['assetName'].values.tolist()[0]
         costCenter = df_filt['costCenterClient'].values.tolist()[0]
         costCenterName = df_filt['costCenterClientName'].values.tolist()[0]
         department = df_filt['department'].values.tolist()[0]
         departmentName = df_filt['departmentName'].values.tolist()[0]
 
-
         return servicos()
 
-    # Novo bloco incluído atpé aqui-------------------------------------------------------------------------
     elif resp == "":
         pass
     else:
@@ -111,15 +109,10 @@ def loginb():
 
 @app.route("/servicos", methods=["GET", "POST"])
 def servicos():
-    global servico, requester, asset, solic
-    global solic_url, solic_headers, solic_body, solic_soup, solic_resp
-    global data, data_convert
-
-    data = str(datetime.today())
-    data_convert = data[0:19]
+    global servico
 
     servico = request.form.get("servico")
-    solic = "185"
+
     print(servico)
     print(requester)
 
@@ -127,55 +120,108 @@ def servicos():
     if (servico is None):
         pass
     else:
-
-        # WEB SERVICE DE ABERTURA DE SOLICITAÇÃO ----------------------------------------------------------------------------------
-
-        solic_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
-        solic_headers = {'content-type': 'text/xml'}
-        solic_body = f"""<?xml version="1.0" encoding="utf-8"?>
-        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-        xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-          <soap:Body>
-            <SaveTableRow xmlns="http://sisteplant.com/">
-              <user>{requester}</user>
-              <company>MASTER2</company>
-              <tableName>WorkRequest</tableName>
-              <columnValues> 
-                <Column> <name>workRequest</name> <value>{solic}</value> </Column>
-                <Column> <name>workRequestName</name> <value>TESTE DE ABERTURA DE MENSAGERIA</value> </Column>
-                <Column> <name>workRequestDescription</name> <value>TESTE DE ABERTURA DE MENSAGERIA</value> </Column>
-                <Column> <name>workRequestType</name> <value>MSG</value> </Column>
-                <Column> <name>asset</name> <value>{asset}</value> </Column>
-                <Column> <name>workRequestDate</name> <value>{data_convert}</value> </Column>
-                <Column> <name>workRequestState</name> <value>00</value> </Column>
-                <Column> <name>workType</name> <value>CHA</value> </Column>
-                <Column> <name>defect</name> <value>SDF</value> </Column>
-                <Column> <name>priority</name> <value>1</value> </Column>
-                <Column> <name>requester</name> <value>{requester}</value> </Column>
-                <Column> <name>job</name> <value>MSG</value> </Column>
-                <Column> <name>customService</name> <value>{servico}</value> </Column>
-              </columnValues>
-            </SaveTableRow>
-          </soap:Body>
-        </soap:Envelope>"""
-
-        response = requests.post(solic_url, data=solic_body, headers=solic_headers)
-        solic_soup = BeautifulSoup(response.content, features="xml")
-        solic_resp = solic_soup.find_all('SaveTableRowResult')[0].text
-        print(response)
-        print(response.reason)
-        print(response.content)
-
-        # Novo bloco incluído atpé aqui-------------------------------------------------------------------------
         return render_template(servico.lower() + ".html")
 
-    return render_template("servicos.html", requester = requester, requesterName=requesterName,
+    return render_template("servicos.html", requester=requester, requesterName=requesterName,
                            email=email, asset=asset, assetName=assetName, costCenter=costCenter,
                            costCenterName=costCenterName, department=department, departmentName=departmentName)
 
 
-# Tela de Serviços mens001 -------------------------------------------------------------------
+# Web Service de abertura de solicitação ----------------------------------------------------------------------------------
+
+def solic():
+    global servico, requester, asset, solic, solic_query, desc_servico
+    global solic_url, solic_headers, solic_body, solic_soup, solic_resp, cursor_Conbras, df_Conbras
+    global data, data_convert
+
+    data = str(datetime.today())
+    data_convert = data[0:19]
+
+    # Função de descrição de serviço
+
+    if servico == 'MENS001':
+        desc_servico = 'SERVICO DE CARTORIO'
+    elif servico == 'MENS002':
+        desc_servico = 'ENTREGA/RETIRADA DE DOCUMENTOS'
+    elif servico == 'MENS003':
+        desc_servico = 'MENSAGERIA INTERNA - UNIDADE SEDE RJ'
+    elif servico == 'MENS004':
+        desc_servico = 'MENSAGERIA MATERIAIS PARA PUBLICIDADE - ENVIO NORMAL'
+    elif servico == 'MENS005':
+        desc_servico = 'MENSAGERIA MATERIAIS PARA PUBLICIDADE - ENVIO EMERGENCIAL'
+    elif servico == 'MENS006':
+        desc_servico = 'MENSAGERIA MATERIAIS PROMOCIONAIS - ENVIO NORMAL'
+    elif servico == 'MENS007':
+        desc_servico = 'MENSAGERIA MATERIAIS PROMOCIONAIS - ENVIO EMERGENCIAL'
+    elif servico == 'MENS008':
+        desc_servico = 'MENSAGERIA MATERIAIS PLV - ENVIO NORMAL'
+    elif servico == 'MENS009':
+        desc_servico = 'MENSAGERIA MATERIAIS PLV - ENVIO EMERGENCIAL'
+    elif servico == 'MENS010':
+        desc_servico = 'MENSAGERIA MATERIAIS PARA EXECUTIVOS OU BAs ENVIO EMERGENCIAL'
+    elif servico == 'MENS010':
+        desc_servico = 'MENSAGERIA MATERIAIS PARA EXECUTIVOS OU BAs ENVIO EMERGENCIAL'
+
+
+
+    solic_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+    solic_headers = {'content-type': 'text/xml'}
+    solic_body = f"""<?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+    xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+      <soap:Body>
+        <SaveTableRow xmlns="http://sisteplant.com/">
+          <user>{requester}</user>
+          <company>MRVVT-ID02</company>
+          <tableName>WorkRequest</tableName>
+          <columnValues> 
+            <Column> <name>workRequestName</name> <value>{desc_servico}</value> </Column>
+            <Column> <name>workRequestDescription</name> <value>TESTE DE ABERTURA DE MENSAGERIA</value> </Column>
+            <Column> <name>workRequestType</name> <value>MENS</value> </Column>
+            <Column> <name>asset</name> <value>{asset}</value> </Column>
+            <Column> <name>workRequestDate</name> <value>{data_convert}</value> </Column>
+            <Column> <name>workRequestState</name> <value>00</value> </Column>
+            <Column> <name>workType</name> <value>CHA</value> </Column>
+            <Column> <name>defect</name> <value>SDF</value> </Column>
+            <Column> <name>priority</name> <value>1</value> </Column>
+            <Column> <name>requester</name> <value>{requester}</value> </Column>
+            <Column> <name>job</name> <value>MENS</value> </Column>
+            <Column> <name>customService</name> <value>{servico}</value> </Column>
+          </columnValues>
+        </SaveTableRow>
+      </soap:Body>
+    </soap:Envelope>"""
+
+    response = requests.post(solic_url, data=solic_body, headers=solic_headers)
+    solic_soup = BeautifulSoup(response.content, features="xml")
+    solic_resp = solic_soup.find_all('SaveTableRowResult')[0].text
+    print(response)
+    print(response.reason)
+    print(response.content)
+
+    # Conectando BD Conbras para trazer a última OS
+    conn_Conbras = pymssql.connect(server='200.196.234.14', user='dbaGPS', password='#Xrt56m7', database='GrupoGPS',
+                                   timeout=0, login_timeout=60, charset='UTF-8', as_dict=False, port='1983',
+                                   autocommit=False,
+                                   tds_version='7.1')
+    cursor_Conbras = conn_Conbras.cursor()
+
+    query_Conbras = f"""select 
+                    max(workRequest)
+                    from WorkRequest where company = 'MRVVT-ID02' and requester = '{requester}'"""
+
+    cursor_Conbras.execute(query_Conbras)
+
+    # dataFrame de solicitantes criado
+    df_Conbras = pd.read_sql(query_Conbras, conn_Conbras)
+    cursor_Conbras.close()
+
+    solic_query = df_Conbras.values.tolist()[0]
+    solic = str(solic_query).strip('[]')
+
+
+    # Tela de Serviços mens001 -------------------------------------------------------------------------------------
 
 mens001_quant = ""
 mens001_colMat = ""
@@ -186,23 +232,27 @@ mens001_outR = ""
 def mens001():
     global mens001_quant, mens001_colMat, mens001_autent, mens001_outR, requester
     global mens001_url, mens001_headers, mens001_body, mens001_resp
-    global mens001_position, mens001_auxDataName, mens001_value, mens001_levelData, solic
+    global mens001_position, mens001_auxDataName, mens001_value, mens001_levelData, solic, mens001_auxFieldType
 
     mens001_quant = request.form.get("mens001_quant")
     mens001_colMat = request.form.get("mens001_colMat")
     mens001_autent = request.form.get("mens001_autent")
     mens001_outR = request.form.get("mens001_outR")
 
-    mens001_position = ("1", "2", "3", "4")
-    mens001_auxDataName = ("Quantidade", "Data da Coleta", "Autenticação", "Outros")
+    mens001_auxFieldType = (1, 1, 1, 1)
+    mens001_auxDataName = ("QUANTIDADE DE ITENS / COLETAR", "PERIODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO",
+                           "AUTENTICACAO", "OUTROS")
     mens001_value = (mens001_quant, mens001_colMat, mens001_autent, mens001_outR)
-    mens001_levelData = ("TESTE1", "TESTE2", "TESTE3", "TESTE4")
+    mens001_levelData = ("03", "04", "25", "26")
+    mens001_position = ("1", "2", "3", "4")
 
-
-    if (mens001_quant is None) or (mens001_colMat is None) or (mens001_autent is None) or (mens001_outR is None):
-        pass
+    if (mens001_quant is None) and (mens001_colMat is None) and (mens001_autent is None) and (mens001_outR is None):
+        return render_template("mens001.html")
     else:
-        for auxDataName, position, levelData, value in zip(mens001_auxDataName, mens001_position, mens001_levelData, mens001_value):
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens001_auxDataName, mens001_position,
+                                                                         mens001_auxFieldType, mens001_levelData,
+                                                                         mens001_value):
             mens001_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
             mens001_headers = {'content-type': 'text/xml'}
             mens001_body = f"""<?xml version="1.0" encoding="utf-8"?>
@@ -212,11 +262,12 @@ def mens001():
                               <soap:Body>
                                 <SaveTableRow xmlns="http://sisteplant.com/">
                                   <user>{requester}</user>
-                                  <company>MASTER2</company>
+                                  <company>MRVVT-ID02</company>
                                   <tableName>WorkRequestData</tableName>
                                   <columnValues>
-                                    <Column> <name>position</name> <value>{position}</value> </Column>
                                     <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                    <Column> <name>position</name> <value>{position}</value> </Column>
+                                    <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
                                     <Column> <name>levelData</name> <value>{levelData}</value> </Column>
                                     <Column> <name>value</name> <value>{value}</value> </Column>
                                     <Column> <name>workRequest</name> <value>{solic}</value> </Column>
@@ -225,7 +276,6 @@ def mens001():
                               </soap:Body>
                             </soap:Envelope>"""
 
-            print(levelData + " / " + value)
             response = requests.post(mens001_url, data=mens001_body, headers=mens001_headers)
             print(response.content)
             mens001_soup = BeautifulSoup(response.content, features="xml")
@@ -235,7 +285,6 @@ def mens001():
             print(response.reason)
             print(response.content)
 
-
             # if resp == "OK":
             #     return servicos()
             # elif resp == "":
@@ -244,8 +293,6 @@ def mens001():
             #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")
 
         return render_template("loginb.html")
-
-
 
 
 # Tela de Serviços mens002 -------------------------------------------------------------------
@@ -270,24 +317,11 @@ mens002_numD = ""
 
 @app.route("/mens002", methods=["GET", "POST"])
 def mens002():
-    global mens002_quant
-    global mens002_colMat
-    global mens002_empR
-    global mens002_endR
-    global mens002_baiR
-    global mens002_cidR
-    global mens002_estR
-    global mens002_cepR
-    global mens002_nomD
-    global mens002_cepD
-    global mens002_endD
-    global mens002_baiD
-    global mens002_cidD
-    global mens002_estD
-    global mens002_telD
-    global mens002_numD
+    global mens002_quant, mens002_colMat, mens002_empR, mens002_endR, mens002_baiR, mens002_cidR, mens002_estR, \
+           mens002_cepR, mens002_nomD, mens002_cepD, mens002_endD, mens002_baiD, mens002_cidD, mens002_estD, mens002_telD, mens002_numD
+    global mens002_url, mens002_headers, mens002_body, mens002_resp
+    global mens002_position, mens002_auxDataName, mens002_value, mens002_levelData, solic, mens002_auxFieldType
 
-    mens002_quant = request.form.get("mens002_quant")
     mens002_quant = request.form.get("mens002_quant")
     mens002_colMat = request.form.get("mens002_colMat")
     mens002_empR = request.form.get("mens002_empR")
@@ -305,10 +339,64 @@ def mens002():
     mens002_telD = request.form.get("mens002_telD")
     mens002_numD = request.form.get("mens002_numD")
 
-    if mens002_quant == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens002_auxFieldType = (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+    mens002_auxDataName = ("QUANTIDADE DE ITENS / COLETAR", "PERÍODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO", "EMPRESA REMETENTE",
+                           "CEP REMETENTE", "ENDEREÇO REMETENTE", "BAIRRO REMETENTE", "CIDADE REMETENTE", "ESTADO REMETENTE",
+                           "NOME DESTINATÁRIO", "CEP DESTINATÁRIO", "ENDEREÇO DESTINATÁRIO", "BAIRRO DESTINATÁRIO", "CIDADE DESTINATÁRIO",
+                           "ESTADO DESTINATÁRIO", "TELEFONE DESTINATÁRIO", "NÚMERO / COMPLEMENTO")
+    mens002_value = (mens002_quant, mens002_colMat, mens002_empR, mens002_endR, mens002_baiR, mens002_cidR, mens002_estR, \
+                     mens002_cepR, mens002_nomD, mens002_cepD, mens002_endD, mens002_baiD, mens002_cidD, mens002_estD, \
+                     mens002_telD, mens002_numD)
+    mens002_levelData = ("03","04","09","10","11","12","13","14","15","16","17","18","19","20","21","22")
+    mens002_position = ("1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16")
+
+    if (mens002_quant is None) and (mens002_colMat is None) and (mens002_empR is None) and (mens002_endR is None):
         return render_template("mens002.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens002_auxDataName, mens002_position,
+                                                                         mens002_auxFieldType, mens002_levelData,
+                                                                         mens002_value):
+            mens002_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens002_headers = {'content-type': 'text/xml'}
+            mens002_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                               <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                               xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                               xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                 <soap:Body>
+                                   <SaveTableRow xmlns="http://sisteplant.com/">
+                                     <user>{requester}</user>
+                                     <company>MRVVT-ID02</company>
+                                     <tableName>WorkRequestData</tableName>
+                                     <columnValues>
+                                       <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                       <Column> <name>position</name> <value>{position}</value> </Column>
+                                       <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                       <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                       <Column> <name>value</name> <value>{value}</value> </Column>
+                                       <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                     </columnValues>
+                                   </SaveTableRow>
+                                 </soap:Body>
+                               </soap:Envelope>"""
+
+            response = requests.post(mens002_url, data=mens002_body, headers=mens002_headers)
+            print(response.content)
+            mens002_soup = BeautifulSoup(response.content, features="xml")
+            mens002_resp = mens002_soup.find_all('SaveTableRowResult')[0].text
+
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")        
+
+        return render_template("loginb.html")
 
 
 # Tela de Serviços mens003 -------------------------------------------------------------------
@@ -317,21 +405,69 @@ mens003_endD = ""
 mens003_baiD = ""
 mens003_numD = ""
 
-
 @app.route("/mens003", methods=["GET", "POST"])
 def mens003():
-    global mens003_endD
-    global mens003_baiD
-    global mens003_numD
+    global mens003_endD, mens003_baiD, mens003_numD
+    global mens003_url, mens003_headers, mens003_body, mens003_resp
+    global mens003_position, mens003_auxDataName, mens003_value, mens003_levelData, solic, mens003_auxFieldType
 
     mens003_endD = request.form.get("mens003_endD")
     mens003_baiD = request.form.get("mens003_baiD")
     mens003_numD = request.form.get("mens003_numD")
 
-    if mens003_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens003_auxFieldType = (1, 1, 1)
+    mens003_auxDataName = ("NUMERO / COMPLEMENTO", "ENDERECO DESTINATARIO", "BAIRRO DESTINATARIO")
+    mens003_value = (mens003_endD, mens003_baiD, mens003_numD)
+    mens003_levelData = ("22", "17", "18")
+    mens003_position = ("1", "2", "3")
+
+    if (mens003_endD is None) and (mens003_baiD is None) and (mens003_numD is None):
         return render_template("mens003.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens003_auxDataName, mens003_position,
+                                                                         mens003_auxFieldType, mens003_levelData,
+                                                                         mens003_value):
+            mens003_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens003_headers = {'content-type': 'text/xml'}
+            mens003_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                                   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                     <soap:Body>
+                                       <SaveTableRow xmlns="http://sisteplant.com/">
+                                         <user>{requester}</user>
+                                         <company>MRVVT-ID02</company>
+                                         <tableName>WorkRequestData</tableName>
+                                         <columnValues>
+                                           <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                           <Column> <name>position</name> <value>{position}</value> </Column>
+                                           <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                           <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                           <Column> <name>value</name> <value>{value}</value> </Column>
+                                           <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                         </columnValues>
+                                       </SaveTableRow>
+                                     </soap:Body>
+                                   </soap:Envelope>"""
+
+            response = requests.post(mens003_url, data=mens003_body, headers=mens003_headers)
+            print(response.content)
+            mens003_soup = BeautifulSoup(response.content, features="xml")
+            mens003_resp = mens003_soup.find_all('SaveTableRowResult')[0].text
+
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")      
+            
+        return render_template("loginb.html")
 
 
 # Tela de Serviços mens004 -------------------------------------------------------------------
@@ -340,7 +476,6 @@ mens004_tipEnv = ""
 mens004_tipPrd = ""
 mens004_quant = ""
 mens004_colMat = ""
-mens004_perEnt = ""
 mens004_pesoKG = ""
 mens004_qbr = ""
 mens004_empE = ""
@@ -364,36 +499,16 @@ mens004_codProj = ""
 
 @app.route("/mens004", methods=["GET", "POST"])
 def mens004():
-    global mens004_tipEnv
-    global mens004_tipPrd
-    global mens004_quant
-    global mens004_colMat
-    global mens004_perEnt
-    global mens004_pesoKG
-    global mens004_qbr
-    global mens004_empE
-    global mens004_empR
-    global mens004_endR
-    global mens004_baiR
-    global mens004_cidR
-    global mens004_estR
-    global mens004_cepR
-    global mens004_nomD
-    global mens004_cepD
-    global mens004_endD
-    global mens004_baiD
-    global mens004_cidD
-    global mens004_estD
-    global mens004_telD
-    global mens004_numD
-    global mens004_valor
-    global mens004_codProj
+    global mens004_tipEnv, mens004_tipPrd, mens004_quant, mens004_colMat, mens004_pesoKG, mens004_qbr, mens004_empE, \
+           mens004_empR, mens004_endR, mens004_baiR, mens004_cidR, mens004_estR, mens004_cepR, mens004_nomD, mens004_cepD,\
+           mens004_endD, mens004_baiD, mens004_cidD, mens004_estD, mens004_telD, mens004_numD, mens004_valor, mens004_codProj
+    global mens004_url, mens004_headers, mens004_body, mens004_resp
+    global mens004_position, mens004_auxDataName, mens004_value, mens004_levelData, solic, mens004_auxFieldType
 
     mens004_tipEnv = request.form.get("mens004_tipEnv")
     mens004_tipPrd = request.form.get("mens004_tipPrd")
     mens004_quant = request.form.get("mens004_quant")
     mens004_colMat = request.form.get("mens004_colMat")
-    mens004_perEnt = request.form.get("mens004_perEnt")
     mens004_pesoKG = request.form.get("mens004_pesoKG")
     mens004_qbr = request.form.get("mens004_qbr")
     mens004_empE = request.form.get("mens004_empE")
@@ -414,10 +529,66 @@ def mens004():
     mens004_valor = request.form.get("mens004_valor")
     mens004_codProj = request.form.get("mens004_codProj")
 
-    if mens004_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens004_auxFieldType = (1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1)
+    mens004_auxDataName = ("TIPO DE ENVIO", "TIPO DE PRODUTO", "QUANTIDADE DE ITENS / COLETAR",
+                           "PERIODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO", "PESO APROXIMADO KG", "EMPRESA PARA ENVIO",
+                           "PERMITE QUEBRA DE ENVIO?", "EMPRESA REMETENTE", "CEP REMETENTE", "ENDERECO REMETENTE", "BAIRRO REMETENTE",
+                           "CIDADE REMETENTE", "ESTADO REMETENTE", "NOME DESTINATARIO", "CEP DESTINATARIO", "ENDEREÇO DESTINATARIO",
+                           "BAIRRO DESTINATARIO", "CIDADE DESTINATARIO", "ESTADO DESTINATARIO", "TELEFONE DESTINATARIO",
+                           "NUMERO / COMPLEMENTO", "VALOR APROXIMADO DO(S) ITEN(S) A ENVIAR", "CCDIGO DE PROJETO")
+    mens004_value = (mens004_tipEnv, mens004_tipPrd, mens004_quant, mens004_colMat, mens004_pesoKG, mens004_qbr, mens004_empE, \
+           mens004_empR, mens004_endR, mens004_baiR, mens004_cidR, mens004_estR, mens004_cepR, mens004_nomD, mens004_cepD,\
+           mens004_endD, mens004_baiD, mens004_cidD, mens004_estD, mens004_telD, mens004_numD, mens004_valor, mens004_codProj)
+    mens004_levelData = ("01","02","03","04","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24")
+    mens004_position = ("1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23")
+
+    if (mens004_endD is None) and (mens004_baiD is None) and (mens004_numD is None):
         return render_template("mens004.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens004_auxDataName, mens004_position,
+                                                                         mens004_auxFieldType, mens004_levelData,
+                                                                         mens004_value):
+            mens004_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens004_headers = {'content-type': 'text/xml'}
+            mens004_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                                   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                     <soap:Body>
+                                       <SaveTableRow xmlns="http://sisteplant.com/">
+                                         <user>{requester}</user>
+                                         <company>MRVVT-ID02</company>
+                                         <tableName>WorkRequestData</tableName>
+                                         <columnValues>
+                                           <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                           <Column> <name>position</name> <value>{position}</value> </Column>
+                                           <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                           <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                           <Column> <name>value</name> <value>{value}</value> </Column>
+                                           <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                         </columnValues>
+                                       </SaveTableRow>
+                                     </soap:Body>
+                                   </soap:Envelope>"""
+
+            response = requests.post(mens004_url, data=mens004_body, headers=mens004_headers)
+            print(response.content)
+            mens004_soup = BeautifulSoup(response.content, features="xml")
+            mens004_resp = mens004_soup.find_all('SaveTableRowResult')[0].text
+
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")      
+
+        return render_template("loginb.html")
 
 
 # Tela de Serviços mens005 -------------------------------------------------------------------
@@ -529,29 +700,11 @@ mens006_codProj = ""
 
 @app.route("/mens006", methods=["GET", "POST"])
 def mens006():
-    global mens006_tipEnv
-    global mens006_tipPrd
-    global mens006_quant
-    global mens006_colMat
-    global mens006_pesoKG
-    global mens006_qbr
-    global mens006_empE
-    global mens006_empR
-    global mens006_endR
-    global mens006_baiR
-    global mens006_cidR
-    global mens006_estR
-    global mens006_cepR
-    global mens006_nomD
-    global mens006_cepD
-    global mens006_endD
-    global mens006_baiD
-    global mens006_cidD
-    global mens006_estD
-    global mens006_telD
-    global mens006_numD
-    global mens006_valor
-    global mens006_codProj
+    global mens006_tipEnv, mens006_tipPrd, mens006_quant, mens006_colMat, mens006_pesoKG, mens006_qbr, mens006_empE, \
+           mens006_empR, mens006_endR, mens006_baiR, mens006_cidR, mens006_estR, mens006_cepR, mens006_nomD, mens006_cepD,\
+           mens006_endD, mens006_baiD, mens006_cidD, mens006_estD, mens006_telD, mens006_numD, mens006_valor, mens006_codProj
+    global mens006_url, mens006_headers, mens006_body, mens006_resp
+    global mens006_position, mens006_auxDataName, mens006_value, mens006_levelData, solic, mens006_auxFieldType
 
     mens006_tipEnv = request.form.get("mens006_tipEnv")
     mens006_tipPrd = request.form.get("mens006_tipPrd")
@@ -577,12 +730,67 @@ def mens006():
     mens006_valor = request.form.get("mens006_valor")
     mens006_codProj = request.form.get("mens006_codProj")
 
-    if mens006_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens006_auxFieldType = (1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1)
+    mens006_auxDataName = ("TIPO DE ENVIO", "TIPO DE PRODUTO", "QUANTIDADE DE ITENS / COLETAR",
+                           "PERIODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO", "PESO APROXIMADO KG", "EMPRESA PARA ENVIO",
+                           "PERMITE QUEBRA DE ENVIO?", "EMPRESA REMETENTE", "CEP REMETENTE", "ENDERECO REMETENTE", "BAIRRO REMETENTE",
+                           "CIDADE REMETENTE", "ESTADO REMETENTE", "NOME DESTINATARIO", "CEP DESTINATARIO", "ENDEREÇO DESTINATARIO",
+                           "BAIRRO DESTINATARIO", "CIDADE DESTINATARIO", "ESTADO DESTINATARIO", "TELEFONE DESTINATARIO",
+                           "NUMERO / COMPLEMENTO", "VALOR APROXIMADO DO(S) ITEN(S) A ENVIAR", "CCDIGO DE PROJETO")
+    mens006_value = (mens006_tipEnv, mens006_tipPrd, mens006_quant, mens006_colMat, mens006_pesoKG, mens006_qbr, mens006_empE, \
+           mens006_empR, mens006_endR, mens006_baiR, mens006_cidR, mens006_estR, mens006_cepR, mens006_nomD, mens006_cepD,\
+           mens006_endD, mens006_baiD, mens006_cidD, mens006_estD, mens006_telD, mens006_numD, mens006_valor, mens006_codProj)
+    mens006_levelData = ("01","02","03","04","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24")
+    mens006_position = ("1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23")
+
+    if (mens006_endD is None) and (mens006_baiD is None) and (mens006_numD is None):
         return render_template("mens006.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens006_auxDataName, mens006_position,
+                                                                         mens006_auxFieldType, mens006_levelData,
+                                                                         mens006_value):
+            mens006_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens006_headers = {'content-type': 'text/xml'}
+            mens006_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                                   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                     <soap:Body>
+                                       <SaveTableRow xmlns="http://sisteplant.com/">
+                                         <user>{requester}</user>
+                                         <company>MRVVT-ID02</company>
+                                         <tableName>WorkRequestData</tableName>
+                                         <columnValues>
+                                           <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                           <Column> <name>position</name> <value>{position}</value> </Column>
+                                           <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                           <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                           <Column> <name>value</name> <value>{value}</value> </Column>
+                                           <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                         </columnValues>
+                                       </SaveTableRow>
+                                     </soap:Body>
+                                   </soap:Envelope>"""
 
+            response = requests.post(mens006_url, data=mens006_body, headers=mens006_headers)
+            print(response.content)
+            mens006_soup = BeautifulSoup(response.content, features="xml")
+            mens006_resp = mens006_soup.find_all('SaveTableRowResult')[0].text
 
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")      
+
+        return render_template("loginb.html")
+    
 # Tela de Serviços mens007 -------------------------------------------------------------------
 
 mens007_tipEnv = ""
@@ -695,29 +903,11 @@ mens008_codProj = ""
 
 @app.route("/mens008", methods=["GET", "POST"])
 def mens008():
-    global mens008_tipEnv
-    global mens008_tipPrd
-    global mens008_quant
-    global mens008_colMat
-    global mens008_pesoKG
-    global mens008_qbr
-    global mens008_empE
-    global mens008_empR
-    global mens008_endR
-    global mens008_baiR
-    global mens008_cidR
-    global mens008_estR
-    global mens008_cepR
-    global mens008_nomD
-    global mens008_cepD
-    global mens008_endD
-    global mens008_baiD
-    global mens008_cidD
-    global mens008_estD
-    global mens008_telD
-    global mens008_numD
-    global mens008_valor
-    global mens008_codProj
+    global mens008_tipEnv, mens008_tipPrd, mens008_quant, mens008_colMat, mens008_pesoKG, mens008_qbr, mens008_empE, \
+           mens008_empR, mens008_endR, mens008_baiR, mens008_cidR, mens008_estR, mens008_cepR, mens008_nomD, mens008_cepD,\
+           mens008_endD, mens008_baiD, mens008_cidD, mens008_estD, mens008_telD, mens008_numD, mens008_valor, mens008_codProj
+    global mens008_url, mens008_headers, mens008_body, mens008_resp
+    global mens008_position, mens008_auxDataName, mens008_value, mens008_levelData, solic, mens008_auxFieldType
 
     mens008_tipEnv = request.form.get("mens008_tipEnv")
     mens008_tipPrd = request.form.get("mens008_tipPrd")
@@ -743,13 +933,69 @@ def mens008():
     mens008_valor = request.form.get("mens008_valor")
     mens008_codProj = request.form.get("mens008_codProj")
 
-    if mens008_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens008_auxFieldType = (1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1)
+    mens008_auxDataName = ("TIPO DE ENVIO", "TIPO DE PRODUTO", "QUANTIDADE DE ITENS / COLETAR",
+                           "PERIODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO", "PESO APROXIMADO KG", "EMPRESA PARA ENVIO",
+                           "PERMITE QUEBRA DE ENVIO?", "EMPRESA REMETENTE", "CEP REMETENTE", "ENDERECO REMETENTE", "BAIRRO REMETENTE",
+                           "CIDADE REMETENTE", "ESTADO REMETENTE", "NOME DESTINATARIO", "CEP DESTINATARIO", "ENDEREÇO DESTINATARIO",
+                           "BAIRRO DESTINATARIO", "CIDADE DESTINATARIO", "ESTADO DESTINATARIO", "TELEFONE DESTINATARIO",
+                           "NUMERO / COMPLEMENTO", "VALOR APROXIMADO DO(S) ITEN(S) A ENVIAR", "CCDIGO DE PROJETO")
+    mens008_value = (mens008_tipEnv, mens008_tipPrd, mens008_quant, mens008_colMat, mens008_pesoKG, mens008_qbr, mens008_empE, \
+           mens008_empR, mens008_endR, mens008_baiR, mens008_cidR, mens008_estR, mens008_cepR, mens008_nomD, mens008_cepD,\
+           mens008_endD, mens008_baiD, mens008_cidD, mens008_estD, mens008_telD, mens008_numD, mens008_valor, mens008_codProj)
+    mens008_levelData = ("01","02","03","04","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24")
+    mens008_position = ("1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23")
+
+    if (mens008_endD is None) and (mens008_baiD is None) and (mens008_numD is None):
         return render_template("mens008.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens008_auxDataName, mens008_position,
+                                                                         mens008_auxFieldType, mens008_levelData,
+                                                                         mens008_value):
+            mens008_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens008_headers = {'content-type': 'text/xml'}
+            mens008_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                                   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                     <soap:Body>
+                                       <SaveTableRow xmlns="http://sisteplant.com/">
+                                         <user>{requester}</user>
+                                         <company>MRVVT-ID02</company>
+                                         <tableName>WorkRequestData</tableName>
+                                         <columnValues>
+                                           <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                           <Column> <name>position</name> <value>{position}</value> </Column>
+                                           <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                           <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                           <Column> <name>value</name> <value>{value}</value> </Column>
+                                           <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                         </columnValues>
+                                       </SaveTableRow>
+                                     </soap:Body>
+                                   </soap:Envelope>"""
 
+            response = requests.post(mens008_url, data=mens008_body, headers=mens008_headers)
+            print(response.content)
+            mens008_soup = BeautifulSoup(response.content, features="xml")
+            mens008_resp = mens008_soup.find_all('SaveTableRowResult')[0].text
 
-# Tela de Serviços mens006 -------------------------------------------------------------------
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")      
+
+        return render_template("loginb.html")
+    
+    
+# Tela de Serviços mens009 -------------------------------------------------------------------
 
 mens009_tipEnv = ""
 mens009_tipPrd = ""
@@ -861,29 +1107,11 @@ mens010_codProj = ""
 
 @app.route("/mens010", methods=["GET", "POST"])
 def mens010():
-    global mens010_tipEnv
-    global mens010_tipPrd
-    global mens010_quant
-    global mens010_colMat
-    global mens010_pesoKG
-    global mens010_qbr
-    global mens010_empE
-    global mens010_empR
-    global mens010_endR
-    global mens010_baiR
-    global mens010_cidR
-    global mens010_estR
-    global mens010_cepR
-    global mens010_nomD
-    global mens010_cepD
-    global mens010_endD
-    global mens010_baiD
-    global mens010_cidD
-    global mens010_estD
-    global mens010_telD
-    global mens010_numD
-    global mens010_valor
-    global mens010_codProj
+    global mens010_tipEnv, mens010_tipPrd, mens010_quant, mens010_colMat, mens010_pesoKG, mens010_qbr, mens010_empE, \
+           mens010_empR, mens010_endR, mens010_baiR, mens010_cidR, mens010_estR, mens010_cepR, mens010_nomD, mens010_cepD,\
+           mens010_endD, mens010_baiD, mens010_cidD, mens010_estD, mens010_telD, mens010_numD, mens010_valor, mens010_codProj
+    global mens010_url, mens010_headers, mens010_body, mens010_resp
+    global mens010_position, mens010_auxDataName, mens010_value, mens010_levelData, solic, mens010_auxFieldType
 
     mens010_tipEnv = request.form.get("mens010_tipEnv")
     mens010_tipPrd = request.form.get("mens010_tipPrd")
@@ -909,11 +1137,66 @@ def mens010():
     mens010_valor = request.form.get("mens010_valor")
     mens010_codProj = request.form.get("mens010_codProj")
 
-    if mens010_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens010_auxFieldType = (1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1)
+    mens010_auxDataName = ("TIPO DE ENVIO", "TIPO DE PRODUTO", "QUANTIDADE DE ITENS / COLETAR",
+                           "PERIODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO", "PESO APROXIMADO KG", "EMPRESA PARA ENVIO",
+                           "PERMITE QUEBRA DE ENVIO?", "EMPRESA REMETENTE", "CEP REMETENTE", "ENDERECO REMETENTE", "BAIRRO REMETENTE",
+                           "CIDADE REMETENTE", "ESTADO REMETENTE", "NOME DESTINATARIO", "CEP DESTINATARIO", "ENDEREÇO DESTINATARIO",
+                           "BAIRRO DESTINATARIO", "CIDADE DESTINATARIO", "ESTADO DESTINATARIO", "TELEFONE DESTINATARIO",
+                           "NUMERO / COMPLEMENTO", "VALOR APROXIMADO DO(S) ITEN(S) A ENVIAR", "CCDIGO DE PROJETO")
+    mens010_value = (mens010_tipEnv, mens010_tipPrd, mens010_quant, mens010_colMat, mens010_pesoKG, mens010_qbr, mens010_empE, \
+           mens010_empR, mens010_endR, mens010_baiR, mens010_cidR, mens010_estR, mens010_cepR, mens010_nomD, mens010_cepD,\
+           mens010_endD, mens010_baiD, mens010_cidD, mens010_estD, mens010_telD, mens010_numD, mens010_valor, mens010_codProj)
+    mens010_levelData = ("01","02","03","04","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24")
+    mens010_position = ("1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23")
+
+    if (mens010_endD is None) and (mens010_baiD is None) and (mens010_numD is None):
         return render_template("mens010.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens010_auxDataName, mens010_position,
+                                                                         mens010_auxFieldType, mens010_levelData,
+                                                                         mens010_value):
+            mens010_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens010_headers = {'content-type': 'text/xml'}
+            mens010_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                                   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                     <soap:Body>
+                                       <SaveTableRow xmlns="http://sisteplant.com/">
+                                         <user>{requester}</user>
+                                         <company>MRVVT-ID02</company>
+                                         <tableName>WorkRequestData</tableName>
+                                         <columnValues>
+                                           <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                           <Column> <name>position</name> <value>{position}</value> </Column>
+                                           <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                           <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                           <Column> <name>value</name> <value>{value}</value> </Column>
+                                           <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                         </columnValues>
+                                       </SaveTableRow>
+                                     </soap:Body>
+                                   </soap:Envelope>"""
 
+            response = requests.post(mens010_url, data=mens010_body, headers=mens010_headers)
+            print(response.content)
+            mens010_soup = BeautifulSoup(response.content, features="xml")
+            mens010_resp = mens010_soup.find_all('SaveTableRowResult')[0].text
+
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")      
+
+        return render_template("loginb.html")
 
 # Tela de Serviços mens011 -------------------------------------------------------------------
 
@@ -1027,29 +1310,11 @@ mens012_codProj = ""
 
 @app.route("/mens012", methods=["GET", "POST"])
 def mens012():
-    global mens012_tipEnv
-    global mens012_tipPrd
-    global mens012_quant
-    global mens012_colMat
-    global mens012_pesoKG
-    global mens012_qbr
-    global mens012_empE
-    global mens012_empR
-    global mens012_endR
-    global mens012_baiR
-    global mens012_cidR
-    global mens012_estR
-    global mens012_cepR
-    global mens012_nomD
-    global mens012_cepD
-    global mens012_endD
-    global mens012_baiD
-    global mens012_cidD
-    global mens012_estD
-    global mens012_telD
-    global mens012_numD
-    global mens012_valor
-    global mens012_codProj
+    global mens012_tipEnv, mens012_tipPrd, mens012_quant, mens012_colMat, mens012_pesoKG, mens012_qbr, mens012_empE, \
+           mens012_empR, mens012_endR, mens012_baiR, mens012_cidR, mens012_estR, mens012_cepR, mens012_nomD, mens012_cepD,\
+           mens012_endD, mens012_baiD, mens012_cidD, mens012_estD, mens012_telD, mens012_numD, mens012_valor, mens012_codProj
+    global mens012_url, mens012_headers, mens012_body, mens012_resp
+    global mens012_position, mens012_auxDataName, mens012_value, mens012_levelData, solic, mens012_auxFieldType
 
     mens012_tipEnv = request.form.get("mens012_tipEnv")
     mens012_tipPrd = request.form.get("mens012_tipPrd")
@@ -1075,10 +1340,66 @@ def mens012():
     mens012_valor = request.form.get("mens012_valor")
     mens012_codProj = request.form.get("mens012_codProj")
 
-    if mens012_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens012_auxFieldType = (1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1)
+    mens012_auxDataName = ("TIPO DE ENVIO", "TIPO DE PRODUTO", "QUANTIDADE DE ITENS / COLETAR",
+                           "PERIODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO", "PESO APROXIMADO KG", "EMPRESA PARA ENVIO",
+                           "PERMITE QUEBRA DE ENVIO?", "EMPRESA REMETENTE", "CEP REMETENTE", "ENDERECO REMETENTE", "BAIRRO REMETENTE",
+                           "CIDADE REMETENTE", "ESTADO REMETENTE", "NOME DESTINATARIO", "CEP DESTINATARIO", "ENDEREÇO DESTINATARIO",
+                           "BAIRRO DESTINATARIO", "CIDADE DESTINATARIO", "ESTADO DESTINATARIO", "TELEFONE DESTINATARIO",
+                           "NUMERO / COMPLEMENTO", "VALOR APROXIMADO DO(S) ITEN(S) A ENVIAR", "CCDIGO DE PROJETO")
+    mens012_value = (mens012_tipEnv, mens012_tipPrd, mens012_quant, mens012_colMat, mens012_pesoKG, mens012_qbr, mens012_empE, \
+           mens012_empR, mens012_endR, mens012_baiR, mens012_cidR, mens012_estR, mens012_cepR, mens012_nomD, mens012_cepD,\
+           mens012_endD, mens012_baiD, mens012_cidD, mens012_estD, mens012_telD, mens012_numD, mens012_valor, mens012_codProj)
+    mens012_levelData = ("01","02","03","04","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24")
+    mens012_position = ("1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23")
+
+    if (mens012_endD is None) and (mens012_baiD is None) and (mens012_numD is None):
         return render_template("mens012.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens012_auxDataName, mens012_position,
+                                                                         mens012_auxFieldType, mens012_levelData,
+                                                                         mens012_value):
+            mens012_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens012_headers = {'content-type': 'text/xml'}
+            mens012_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                                   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                     <soap:Body>
+                                       <SaveTableRow xmlns="http://sisteplant.com/">
+                                         <user>{requester}</user>
+                                         <company>MRVVT-ID02</company>
+                                         <tableName>WorkRequestData</tableName>
+                                         <columnValues>
+                                           <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                           <Column> <name>position</name> <value>{position}</value> </Column>
+                                           <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                           <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                           <Column> <name>value</name> <value>{value}</value> </Column>
+                                           <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                         </columnValues>
+                                       </SaveTableRow>
+                                     </soap:Body>
+                                   </soap:Envelope>"""
+
+            response = requests.post(mens012_url, data=mens012_body, headers=mens012_headers)
+            print(response.content)
+            mens012_soup = BeautifulSoup(response.content, features="xml")
+            mens012_resp = mens012_soup.find_all('SaveTableRowResult')[0].text
+
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")      
+
+        return render_template("loginb.html")
 
 
 # Tela de Serviços mens013 -------------------------------------------------------------------
@@ -1193,29 +1514,11 @@ mens014_codProj = ""
 
 @app.route("/mens014", methods=["GET", "POST"])
 def mens014():
-    global mens014_tipEnv
-    global mens014_tipPrd
-    global mens014_quant
-    global mens014_colMat
-    global mens014_pesoKG
-    global mens014_qbr
-    global mens014_empE
-    global mens014_empR
-    global mens014_endR
-    global mens014_baiR
-    global mens014_cidR
-    global mens014_estR
-    global mens014_cepR
-    global mens014_nomD
-    global mens014_cepD
-    global mens014_endD
-    global mens014_baiD
-    global mens014_cidD
-    global mens014_estD
-    global mens014_telD
-    global mens014_numD
-    global mens014_valor
-    global mens014_codProj
+    global mens014_tipEnv, mens014_tipPrd, mens014_quant, mens014_colMat, mens014_pesoKG, mens014_qbr, mens014_empE, \
+           mens014_empR, mens014_endR, mens014_baiR, mens014_cidR, mens014_estR, mens014_cepR, mens014_nomD, mens014_cepD,\
+           mens014_endD, mens014_baiD, mens014_cidD, mens014_estD, mens014_telD, mens014_numD, mens014_valor, mens014_codProj
+    global mens014_url, mens014_headers, mens014_body, mens014_resp
+    global mens014_position, mens014_auxDataName, mens014_value, mens014_levelData, solic, mens014_auxFieldType
 
     mens014_tipEnv = request.form.get("mens014_tipEnv")
     mens014_tipPrd = request.form.get("mens014_tipPrd")
@@ -1241,10 +1544,67 @@ def mens014():
     mens014_valor = request.form.get("mens014_valor")
     mens014_codProj = request.form.get("mens014_codProj")
 
-    if mens014_endD == "":  # and (pos_b is None) and (pos_c is None) and (pos_d is None)
+    mens014_auxFieldType = (1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1, 1, 1,1, 1, 1)
+    mens014_auxDataName = ("TIPO DE ENVIO", "TIPO DE PRODUTO", "QUANTIDADE DE ITENS / COLETAR",
+                           "PERIODO DE COLETA DO MATERIAL / DATA HORA PARA ENVIO", "PESO APROXIMADO KG", "EMPRESA PARA ENVIO",
+                           "PERMITE QUEBRA DE ENVIO?", "EMPRESA REMETENTE", "CEP REMETENTE", "ENDERECO REMETENTE", "BAIRRO REMETENTE",
+                           "CIDADE REMETENTE", "ESTADO REMETENTE", "NOME DESTINATARIO", "CEP DESTINATARIO", "ENDEREÇO DESTINATARIO",
+                           "BAIRRO DESTINATARIO", "CIDADE DESTINATARIO", "ESTADO DESTINATARIO", "TELEFONE DESTINATARIO",
+                           "NUMERO / COMPLEMENTO", "VALOR APROXIMADO DO(S) ITEN(S) A ENVIAR", "CCDIGO DE PROJETO")
+    mens014_value = (mens014_tipEnv, mens014_tipPrd, mens014_quant, mens014_colMat, mens014_pesoKG, mens014_qbr, mens014_empE, \
+           mens014_empR, mens014_endR, mens014_baiR, mens014_cidR, mens014_estR, mens014_cepR, mens014_nomD, mens014_cepD,\
+           mens014_endD, mens014_baiD, mens014_cidD, mens014_estD, mens014_telD, mens014_numD, mens014_valor, mens014_codProj)
+    mens014_levelData = ("01","02","03","04","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24")
+    mens014_position = ("1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23")
+
+    if (mens014_endD is None) and (mens014_baiD is None) and (mens014_numD is None):
         return render_template("mens014.html")
     else:
-        return render_template("login.html")
+        solic()
+        for auxDataName, position, auxFieldType, levelData, value in zip(mens014_auxDataName, mens014_position,
+                                                                         mens014_auxFieldType, mens014_levelData,
+                                                                         mens014_value):
+            mens014_url = "https://inteligencia.conbras.com/Prisma4/WebServices/Public/SaveData.asmx"
+            mens014_headers = {'content-type': 'text/xml'}
+            mens014_body = f"""<?xml version="1.0" encoding="utf-8"?>
+                                   <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                                   xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                                     <soap:Body>
+                                       <SaveTableRow xmlns="http://sisteplant.com/">
+                                         <user>{requester}</user>
+                                         <company>MRVVT-ID02</company>
+                                         <tableName>WorkRequestData</tableName>
+                                         <columnValues>
+                                           <Column> <name>auxDataName</name> <value>{auxDataName}</value> </Column>
+                                           <Column> <name>position</name> <value>{position}</value> </Column>
+                                           <Column> <name>auxFieldType</name> <value>{auxFieldType}</value> </Column>
+                                           <Column> <name>levelData</name> <value>{levelData}</value> </Column>
+                                           <Column> <name>value</name> <value>{value}</value> </Column>
+                                           <Column> <name>workRequest</name> <value>{solic}</value> </Column>
+                                         </columnValues>
+                                       </SaveTableRow>
+                                     </soap:Body>
+                                   </soap:Envelope>"""
+
+            response = requests.post(mens014_url, data=mens014_body, headers=mens014_headers)
+            print(response.content)
+            mens014_soup = BeautifulSoup(response.content, features="xml")
+            mens014_resp = mens014_soup.find_all('SaveTableRowResult')[0].text
+
+            print(response)
+            print(response.reason)
+            print(response.content)
+
+            # if resp == "OK":
+            #     return servicos()
+            # elif resp == "":
+            #     pass
+            # else:
+            #     pyautogui.alert("Erro. Por favor, verifique seu login / senha.")      
+
+        return render_template("loginb.html")
+
 
 
 # Tela de Serviços mens015 -------------------------------------------------------------------

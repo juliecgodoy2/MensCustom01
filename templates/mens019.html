@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L'oreal Mensageria (SERVIÇO DE CARTÓRIO)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loginb.css') }}" />
+  </head>
+  <body>
+    <h1>SERVIÇOS BANCÁRIOS "PEDIDO FEITO APÓS AS 15H, SERÁ ATENDIDO NO PRÓXIMO DIA UTIL"</h1>
+    <form action="/mens019" method="POST">
+
+      <<div class="form__fieldset">
+        <label for="mens019_observ" class=" form__label">OBSERVAÇÃO:</label>
+        <input type="text" name="mens019_observ" id="mens019_observ" class="form__input"/>
+      </div>
+
+      <div class="form__fieldset">
+        <input
+          class="form__submit form__input"
+          type="submit"
+          value="Ok"
+        />
+      </div>
+    </form>
+  </body>
+</html>
